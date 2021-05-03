@@ -52,6 +52,15 @@ Example     | Precedes text used to illustrate a rule or a recommendation.
 Reason      | Explains the thoughts and purpose behind a rule or a recommendation.
 Restriction | Describes the circumstances to be fulfilled to make use of a rule.
 
+### Validator support ###
+
+The tool PL/SQL Cop (see the "Tool Support" chapter) cannot support *all* the guidelines in this document. Those guidelines that are *not* supported by PL/SQL Cop validators are marked like this:
+
+!!! missing "Unsupported in PL/SQL Cop Validators"
+    Reason why the specific guideline is not supported by the validators.
+
+The PL/SQL Cop repository documents the [details of validator limitations](https://github.com/Trivadis/plsql-cop-cli/blob/main/validator-limitations.md#guidelines).
+
 ### Why are standards important
 
 For a machine executing a program, code formatting is of no importance. However, for the human eye, well-formatted code is much easier to read. Modern tools can help to implement format and coding rules.
@@ -78,7 +87,7 @@ There are basically two types of standards.
 
 2. Controversial
 
-    Almost every rule/guildeline falls into this category. An example of this category is [3 space indention](../../3-coding-style/coding-style/#rules). - Why not 2 or 4 or even 8? Why not use tabs? You can argue in favor of all these options. In most cases it does not really matter which option you choose. Being consistent is more important. In this case it will make the code easier to read.
+    Almost every rule/guideline falls into this category. An example of this category is [3 space indention](../../3-coding-style/coding-style/#rules). - Why not 2 or 4 or even 8? Why not use tabs? You can argue in favor of all these options. In most cases it does not really matter which option you choose. Being consistent is more important. In this case it will make the code easier to read.
 
 For very controversial rules, we have started to include the reasoning either as a footnote or directly in the text.
 

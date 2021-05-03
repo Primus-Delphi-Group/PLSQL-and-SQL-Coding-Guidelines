@@ -1,36 +1,30 @@
-FROM centos:7.6.1810
+FROM oraclelinux:8
 
 LABEL maintainer="philipp.salvisberg@trivadis.com"
 LABEL description="Tools to generate HTML and PDF using Materials for MkDocs and wkhtmltopdf."
 LABEL build.command="docker build . --tag trivadis/mktools:latest"
 
-# install python, not part of centos
-# see https://www.osetc.com/en/how-to-install-the-latest-python-3-3-6-x-3-7-x-on-centos-7-or-rhel-7.html
-RUN yum install -y https://centos7.iuscommunity.org/ius-release.rpm
-RUN yum update -y
-RUN yum install -y python36u python36u-libs python36u-devel python36u-pip
+# install python
+RUN dnf -y update
+RUN dnf -y install python38 python38-pip
 
-# install git and wget
-RUN yum install -y git
-RUN yum install -y wget
+# install git
+RUN dnf -y install git
 
-# install wkhtmltox 0.12.4 since 0.12.5 cannot create TOCs, see https://github.com/wkhtmltopdf/wkhtmltopdf/issues/3995
-# RUN yum install -y https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox-0.12.5-1.centos7.x86_64.rpm
-RUN yum install -y yum install -y wkhtmltopdf
-RUN wget -q https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz -O /tmp/wkhtmltox.tar.xz && \
-    tar xvf /tmp/wkhtmltox.tar.xz -C /tmp && \
-    cp -rp /tmp/wkhtmltox/* /usr/local && \
-    rm -rf /tmp/wkhtmltox*
+# install python modules
+# using "--root" should suppress "WARNING: Running pip install with root privileges is generally not a good idea." in future releases
+RUN python3 -m pip install --upgrade pip --root /
+RUN python3 -m pip install --root / \
+        'mkdocs==1.1.2' \
+        'mkdocs-material==6.2.8' \
+        'mkdocs-awesome-pages-plugin==2.5.0' \
+        'pymdown-extensions==8.1.1' \
+        'mike==0.5.5' 
 
-# install python modules (most recent versions)
-RUN pip3.6 install --upgrade pip
-RUN pip3.6 install mkdocs \
-                   mkdocs-material \
-                   mkdocs-awesome-pages-plugin \
-                   pymdown-extensions \
-                   mike 
+# install wkhtmltox 0.12.6
+RUN dnf -y install https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.centos8.x86_64.rpm
 
-ENV LC_ALL=en_US.utf8
+# set environment
 ENV LANG=en_US.utf8
 
 # volume for GitHub project's root folder containing docs folder  

@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 function create_target_dir(){
     rm -Rf ${TARGET_DIR}
@@ -10,6 +10,17 @@ function copy_resources() {
     cp -r ${DATA_DIR}/custom-theme ${TARGET_DIR}/custom-theme
     cp -r ${DATA_DIR}/docs/images ${TARGET_DIR}/docs
     cp -r ${DATA_DIR}/docs/stylesheets ${TARGET_DIR}/docs/stylesheets
+}
+
+# Materials for MkDocs 5.5.14 uses CSS that leads to wkhtmltopdf 0.12.6 printing all line numbers before the code with 
+#   - "codehilite" plugin and "linenums: true"
+#   - "pymdownx.highlight" plugin and "linenums_style: table" (default)
+# The workaround is to use "pymdownx.highlight" with "linenums_style: pymdownx-inline" and some CSS fixes
+# This is acceptable since the PDF is the secondary format and "pymdownx.highlight" is the newer plugin
+# with some nice features for the HTML version.
+function fix_mkdocs_yml() {
+    mv ${TARGET_DIR}/mkdocs.yml ${TARGET_DIR}/mkdocs.ori.yml
+    sed -e 's/linenums_style: table/linenums_style: pymdownx-inline/g' ${TARGET_DIR}/mkdocs.ori.yml > ${TARGET_DIR}/mkdocs.yml
 }
 
 function create_cover() {
@@ -44,7 +55,9 @@ function write_guidelines(){
     for f in ${DATA_DIR}/docs/${DIR}/*.md
     do
         echo "" >> ${TARGET_DIR}/docs/index.md
-        sed -e "s|# |${HEADER} |g" $f >> ${TARGET_DIR}/docs/index.md
+        sed -e "s|# |${HEADER} |g" $f | \
+        sed -e 's|../../../../4-language-usage/3-dml-and-sql/3-transaction-control/g-3310|#g-3310-never-commit-within-a-cursor-loop|g' | \
+        sed -e 's|../../../../4-language-usage/3-dml-and-sql/3-transaction-control/g-3320|#g-3320-try-to-move-transactions-within-a-non-cursor-loop-into-procedures|g' >> ${TARGET_DIR}/docs/index.md
     done
 }
 
@@ -58,7 +71,10 @@ function convert_to_pdf(){
     mkdocs build
     cd site
     fix_footnote_links
-    wkhtmltopdf --javascript-delay 3000 \
+    wkhtmltopdf --enable-local-file-access \
+                --allow "." \
+                --disable-smart-shrinking \
+                --javascript-delay 12000 \
                 --outline-depth 6 \
                 --outline \
                 --print-media-type \
@@ -83,6 +99,7 @@ TARGET_DIR=${DATA_DIR}/pdf
 
 create_target_dir
 copy_resources
+fix_mkdocs_yml
 create_cover
 write_file "index.md"
 write_file "1-introduction/introduction.md"
@@ -102,11 +119,15 @@ write_text "### Boolean Data Types"
 write_guidelines "4-language-usage/2-variables-and-types/4-boolean-data-types" "####"
 write_text "### Large Objects"
 write_guidelines "4-language-usage/2-variables-and-types/5-large-objects" "####"
+write_text "### Cursor Variables"
+write_guidelines "4-language-usage/2-variables-and-types/6-cursor-variables" "####"
 write_text "## DML &amp; SQL"
 write_text "### General"
 write_guidelines "4-language-usage/3-dml-and-sql/1-general" "####"
 write_text "### Bulk Operations"
 write_guidelines "4-language-usage/3-dml-and-sql/2-bulk-operations" "####"
+write_text "### Transaction Control"
+write_guidelines "4-language-usage/3-dml-and-sql/3-transaction-control" "####"
 write_text "## Control Structures"
 write_text "### CURSOR"
 write_guidelines "4-language-usage/4-control-structures/1-cursor" "####"
@@ -145,6 +166,8 @@ write_text "### Ensure single execution at a time of a program unit"
 write_guidelines "4-language-usage/8-patterns/4-ensure-single-execution-at-a-time-of-a-program-unit" "####"
 write_text "### Use dbms_application_info package to follow progress of a process"
 write_guidelines "4-language-usage/8-patterns/5-use-dbms-application-info-package-to-follow-progress-of-a-process" "####"
+write_text "## Function Usage"
+write_guidelines "4-language-usage/9-function-usage" "###"
 write_file "5-complexity-analysis/complexity-analysis.md"
 write_file "6-code-reviews/code-reviews.md"
 write_file "7-tool-support/tool-support.md"
